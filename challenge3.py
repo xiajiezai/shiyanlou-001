@@ -77,7 +77,21 @@ config=Config()
 class UserData(object):
 	def __init__(self):
 		self.userdata=self._read_users_data()
-
+	def _read_users_data():
+		userdata_path=args.userdata_path
+		userdata=[]
+		with open(userdata_path) as f:
+			for line in f:
+				employee_number,income_string = line.strip().split(',')
+				try:
+					income=int(income_string)
+				except ValueError:
+					print('Parameter Error')
+					exit()
+				userdata=append((employee_number,income))
+		return userdata
+	def __iter__(self):
+		return iter(self.userdata)
 		#error
 
 
@@ -87,6 +101,7 @@ class IncomeTaxCalculator(object):
 
 
 if __name__=='__main__':
+	main()
 
 
 
@@ -150,5 +165,3 @@ def main():
 		Salary=float(EAT(earningsafterinsurance(EBT)))
 		print('{}:{:.2f}'.format(EmployeeNumber,Salary))
 	
-if __name__=='__main__':
-	main()
