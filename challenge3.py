@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sys
 import csv
 from collections import namedtuple
@@ -56,8 +57,8 @@ class Config(object):
 		config={}
 		with open(config_path) as f:
 			for line in f.readlines():
+				key, value= line.split('=')
 				try:
-					key, value= line.split('=')
 					config[key.strip()]=float(value().split())
 					#make them a key and a value in dict config
 					except ValueError:
@@ -93,18 +94,18 @@ config=Config()
 class UserData(object):
 	def __init__(self):
 		self.userdata=self._read_users_data()
-	def _read_users_data():
+	def _read_users_data(self):
 		userdata_path=args.userdata_path
 		userdata=[]
 		with open(userdata_path) as f:
 			for line in f:
-				employee_number,income_string = line.strip().split(',')
+				EmployeeNumber,income_string = line.strip().split(',')
 				try:
 					income=int(income_string)
 				except ValueError:
 					print('Parameter Error')
 					exit()
-				userdata=append((employee_number,income))
+				userdata=append((EmployeeNumber,income))
 		return userdata
 	def __iter__(self):
 		return iter(self.userdata)
@@ -148,11 +149,10 @@ class IncomeTaxCalculator(object):
 
 	def export_to_file(self, default='csv'):
 		result=self.calc_for_all_userdata()
-		with open(args.export_path, 'w', newline=''):
+		with open(args.export_path, 'w', newline='') as f:
 			write=csv.write(f)
 			#if we don't use csv, we have to add comma to separate items in list
 			write.writerows(result)
-
 
 
 if __name__=='__main__':
