@@ -1,5 +1,21 @@
 import sys
 import csv
+from collections import namedtuple
+
+IncomeTaxQuickLookupItem = namedtuple(
+	'IncomeTaxQuickLookupItem',
+	['TaxableBracket','TaxRate','Subtractor']
+)
+
+Threshold=3500
+QUICK_LOOKUP=[
+	IncomeTaxQuickLookupItem(80000,0.45,13505),
+	IncomeTaxQuickLookupItem(55000,0.35,5505),
+	IncomeTaxQuickLookupItem(35000,0.3,2755),
+	IncomeTaxQuickLookupItem(9000,0.25,1005),
+	IncomeTaxQuickLookupItem(4500,0.2,555),
+	IncomeTaxQuickLookupItem(1500,0.1,105),
+	IncomeTaxQuickLookupItem(0,0.03,0)
 
 #input: c, output:config.cfg,etc.
 class Args(object):
@@ -97,7 +113,33 @@ class UserData(object):
 
 #calculate EAT and wirte it into salary.csv
 class IncomeTaxCalculator(object):
-	def __init__(self)
+	def __init__(self,userdata):
+		self.userdata=userdata
+	@staticmethod
+	def calc_social_insurance(income):
+		if income<config.insurance_base_threshold:
+			return config.insurance_base_threshold*config.insurance_rate
+		if income>config.insurance_base_ceiling:
+			return config.insurance_base_ceiling*config.insurance_rate
+		return income*config.insurance_rate
+	@classmethod
+	def calc_EAT(cls, income):
+		social_insurance=cls.calc_social_insurance(income):
+		#here we use calc_social_insuarance, which is a method in class IncomeTaxCalculator, so we have to use classmethod
+		EarningsAfterInsurance=income- social_insurance
+		Payable=earningsafterinsurance- Threshold
+		if Payable<=0:
+			return EarningsAfterInsurance
+		for item in QUICK_LOOKUP:
+			if Payable > item.TaxableBracket:
+				TAX = Payable*item.TaxRate-item.Subtractor
+				EAT=EarningsAfterInsurance-TAX
+				return EAT
+
+	def calc_for_all_userdata(self):
+		result=[]
+		for EmployeeNumber, income in self.
+
 
 
 if __name__=='__main__':
