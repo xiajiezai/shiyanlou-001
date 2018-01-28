@@ -134,23 +134,37 @@ class IncomeTaxCalculator(object):
 			if Payable > item.TaxableBracket:
 				TAX = Payable*item.TaxRate-item.Subtractor
 				EAT=EarningsAfterInsurance-TAX
-				return EAT
+				return TAX, EAT
 
 	def calc_for_all_userdata(self):
 		result=[]
-		for EmployeeNumber, income in self.
+		for EmployeeNumber, income in self.userdata:
+			data=[EmployeeNumber,income]
+			social_insurance=self.calc_social_insurance(income)
+			tax, Salary=self.calc_EAT(income)
+			data+= [social_insurance, TAX, Salary]
+			result.append.data
+		return result
+
+	def export_to_file(self, default='csv'):
+		result=self.calc_for_all_userdata()
+		with open(args.export_path, 'w', newline=''):
+			write=csv.write(f)
+			#if we don't use csv, we have to add comma to separate items in list
+			write.writerows(result)
 
 
 
 if __name__=='__main__':
-	main()
+	calculator=IncomeTaxCalculator(UserData())
+	calculator.export_to_file()
 
 
 
 
 
 #####################
-
+'''
 from collections import namedtuple
 
 IncomeTaxQuickLookupItem = namedtuple(
@@ -207,3 +221,4 @@ def main():
 		Salary=float(EAT(earningsafterinsurance(EBT)))
 		print('{}:{:.2f}'.format(EmployeeNumber,Salary))
 	
+'''
