@@ -17,7 +17,7 @@ QUICK_LOOKUP=[
 	IncomeTaxQuickLookupItem(4500,0.2,555),
 	IncomeTaxQuickLookupItem(1500,0.1,105),
 	IncomeTaxQuickLookupItem(0,0.03,0)
-
+]
 #input: c, output:config.cfg,etc.
 class Args(object):
 	def __init__(self):
@@ -27,19 +27,20 @@ class Args(object):
 	#methods in a class usually start with an underline
 		try:
 			index=self.args.index(option)
-			return self.args.index(index+1)
+			return self.args[index+1]
 		except(ValueError, IndexError):
 			print('Parameter Error')
-			exit()
+			#exit()
 
 	@property
 	def config_path(self):
 		return self._value_after_option('-c')
 	#if we don't use property, when we use config_path, we have to write args.config_path(), with the bracket.
 
+	@property
 	def userdata_path(self):
 		return self._value_after_option('-d')
-
+	@property
 	def export_path(self):
 		return self._value_after_option('-o')
 
@@ -57,12 +58,13 @@ class Config(object):
 		config={}
 		with open(config_path) as f:
 			for line in f.readlines():
-				key, value= line.split('=')
+				key, value= line.strip().split('=')
 				try:
-					config[key.strip()]=float(value().split())
+					config[key.strip()]=float(value.strip())
 					#make them a key and a value in dict config
-					except ValueError:
+				except ValueError:
 					print('Parameter Error')
+					exit()
 		return config
 
 	def _get_config(self, key):
@@ -74,19 +76,19 @@ class Config(object):
 
 	@property
 	def insurance_base_threshold(self):
-		return self._get_config('JishuL')
+		return self._get_config('JiShuL')
 	@property
 	def insurance_base_ceiling(self):
-	return self._get_config('JishuH')
+		return self._get_config('JiShuH')
 	@property
 	def insurance_rate(self):
-	return sum([
-		self._get_config('YangLao'),
-		self._get_config('YiLiao'),
-		self._get_config('ShiYe'),
-		self._get_config('GongShang'),
-		self._get_config('ShengYu'),
-		self._get_config('GongJiJin'),
+		return sum([
+			self._get_config('YangLao'),
+			self._get_config('YiLiao'),
+			self._get_config('ShiYe'),
+			self._get_config('GongShang'),
+			self._get_config('ShengYu'),
+			self._get_config('GongJiJin'),
 		])
 config=Config()
 
@@ -98,18 +100,17 @@ class UserData(object):
 		userdata_path=args.userdata_path
 		userdata=[]
 		with open(userdata_path) as f:
-			for line in f:
+			for line in f.readlines():
 				EmployeeNumber,income_string = line.strip().split(',')
 				try:
 					income=int(income_string)
 				except ValueError:
 					print('Parameter Error')
 					exit()
-				userdata=append((EmployeeNumber,income))
+				userdata.append((EmployeeNumber,income))
 		return userdata
 	def __iter__(self):
 		return iter(self.userdata)
-		#error
 
 
 #calculate EAT and wirte it into salary.csv
@@ -125,100 +126,36 @@ class IncomeTaxCalculator(object):
 		return income*config.insurance_rate
 	@classmethod
 	def calc_EAT(cls, income):
-		social_insurance=cls.calc_social_insurance(income):
+		social_insurance=cls.calc_social_insurance(income)
 		#here we use calc_social_insuarance, which is a method in class IncomeTaxCalculator, so we have to use classmethod
 		EarningsAfterInsurance=income- social_insurance
-		Payable=earningsafterinsurance- Threshold
+		Payable=EarningsAfterInsurance- Threshold
 		if Payable<=0:
-			return EarningsAfterInsurance
+			return '0.00', '{:.2f}'.format(EarningsAfterInsurance)
 		for item in QUICK_LOOKUP:
 			if Payable > item.TaxableBracket:
 				TAX = Payable*item.TaxRate-item.Subtractor
 				EAT=EarningsAfterInsurance-TAX
-				return TAX, EAT
+				return '{:.2f}'.format(TAX), '{:.2f}'.format(EAT)
 
 	def calc_for_all_userdata(self):
 		result=[]
 		for EmployeeNumber, income in self.userdata:
 			data=[EmployeeNumber,income]
-			social_insurance=self.calc_social_insurance(income)
-			tax, Salary=self.calc_EAT(income)
+			social_insurance='{:.2f}'.format(self.calc_social_insurance(income))
+			TAX, Salary=self.calc_EAT(income)
 			data+= [social_insurance, TAX, Salary]
-			result.append.data
+			result.append(data)
 		return result
 
 	def export_to_file(self, default='csv'):
 		result=self.calc_for_all_userdata()
 		with open(args.export_path, 'w', newline='') as f:
-			write=csv.write(f)
+			writer=csv.writer(f)
 			#if we don't use csv, we have to add comma to separate items in list
-			write.writerows(result)
+			writer.writerows(result)
 
 
 if __name__=='__main__':
 	calculator=IncomeTaxCalculator(UserData())
 	calculator.export_to_file()
-
-
-
-
-
-#####################
-'''
-from collections import namedtuple
-
-IncomeTaxQuickLookupItem = namedtuple(
-	'IncomeTaxQuickLookupItem',
-	['TaxableBracket','TaxRate','Subtractor']
-)
-
-Threshold=3500
-QUICK_LOOKUP=[
-	IncomeTaxQuickLookupItem(80000,0.45,13505),
-	IncomeTaxQuickLookupItem(55000,0.35,5505),
-	IncomeTaxQuickLookupItem(35000,0.3,2755),
-	IncomeTaxQuickLookupItem(9000,0.25,1005),
-	IncomeTaxQuickLookupItem(4500,0.2,555),
-	IncomeTaxQuickLookupItem(1500,0.1,105),
-	IncomeTaxQuickLookupItem(0,0.03,0)
-]
-
-def earningsafterinsurance(EBT):
-	EndowmentRate=.08
-	MedicalRate=.02
-	UnemploymentRate=.005
-	EmploymentInjuryRate=0
-	MaternityRate=0
-	HousingFundRate=0.06
-	TotalRate=EndowmentRate+MedicalRate+ UnemploymentRate + \
-	EmploymentInjuryRate + MaternityRate+ HousingFundRate
-	EarningsAfterInsurance=EBT*(1-TotalRate)
-	return EarningsAfterInsurance
-
-
-def EAT(EarningsAfterInsurance):
-	Payable=EarningsAfterInsurance-Threshold
-	if Payable<=0:
-		return EarningsAfterInsurance
-	for item in QUICK_LOOKUP:
-		if Payable > item.TaxableBracket:
-			TAX = Payable*item.TaxRate-item.Subtractor
-			EAT=EarningsAfterInsurance-TAX
-			return EAT
-
-
-
-def main():
-	import sys
-	item=sys.argv[1:]
-	for argv in item:
-		EmployeeNumber, EBTString=argv.split(':')
-		try:
-			EBT=int(EBTString)
-		except ValueError:
-			print('Parameter Error')
-			exit()
-		Salary=float(EAT(earningsafterinsurance(EBT)))
-		print('{}:{:.2f}'.format(EmployeeNumber,Salary))
-	
-'''
