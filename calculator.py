@@ -56,3 +56,4 @@ def main():
 	
 if __name__=='__main__':
 	main()
+	#使python3 calculator.py能执行
